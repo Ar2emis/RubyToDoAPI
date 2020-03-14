@@ -1,3 +1,5 @@
-from django.contrib import admin
+from django.contrib import admin, auth
 
-# Register your models here.
+
+admin.site.unregister(auth.models.Group)
+# admin.site.unregister(auth.models.User)
