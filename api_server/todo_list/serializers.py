@@ -10,11 +10,11 @@ class TaskSeriaizer(serializers.HyperlinkedModelSerializer):
         fields = ['text', 'is_done', 'priority', 'deadline', 'url']
 
 class ProjectSerializer(serializers.HyperlinkedModelSerializer):
-    tasks = TaskSeriaizer(many=True)
+    tasks = TaskSeriaizer(many=True, required=False)
 
     class Meta:
         model = Project
-        fields = ['name', 'tasks', 'url']
+        fields = ['name', 'owner', 'tasks', 'url']
 
 class TasksReprioritizeSerializer(serializers.Serializer):
     priorities = serializers.ListField(child=serializers.IntegerField())

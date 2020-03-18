@@ -89,6 +89,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         return response
 
+    def perform_create(self, serializer):
+        token = self.request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
+
+        user = Token.objects.get(key=token).user
+
+        serializer.save(owner=user)
+
+
+
     @action(detail=True, methods=['post'])
     def reprioritize(self, request, pk=None):
         serializer = self.get_serializer_class()(data=self.request.data)
