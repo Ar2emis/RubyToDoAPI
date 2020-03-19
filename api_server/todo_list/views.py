@@ -142,12 +142,14 @@ class TaskViewSet(viewsets.ModelViewSet):
     def destroy(self, request, pk=None):
         task = self.get_object()
 
-        project = task.project_set().first()
+        project = task.project_set.first()
 
-        super(TaskViewSet, self).destroy(request, pk)
+        response = super(TaskViewSet, self).destroy(request, pk)
 
-        tasks = project.tasks.all()
+        tasks = project.tasks.order_by('priority').all()
 
-        for index in tasks:
+        for index in range(len(tasks)):
             tasks[index].priority = index
-            task.save()
+            tasks[index].save()
+
+        return response
