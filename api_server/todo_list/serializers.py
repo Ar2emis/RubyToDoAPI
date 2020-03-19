@@ -3,7 +3,7 @@ from .models import Task, Project
 
 
 class TaskSeriaizer(serializers.HyperlinkedModelSerializer):
-    priority = serializers.IntegerField(read_only=True)
+    priority = serializers.IntegerField(default=-1)
 
     class Meta:
         model = Task
@@ -17,7 +17,8 @@ class ProjectSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['name', 'owner', 'tasks', 'url']
 
 class TasksReprioritizeSerializer(serializers.Serializer):
-    priorities = serializers.ListField(child=serializers.IntegerField())
+    index = serializers.IntegerField()
+    up = serializers.BooleanField()
 
     class Meta:
-        fields = ['priorities']
+        fields = ['index', 'up']

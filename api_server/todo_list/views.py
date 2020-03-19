@@ -46,6 +46,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         task = serializer.instance
         task.priority = len(project.tasks.all())
 
+        task.save()
+
         project.tasks.add(task)
 
         data = self.serializer_class(instance=project, context={'request': request}).data
@@ -96,8 +98,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         serializer.save(owner=user)
 
-
-
     @action(detail=True, methods=['post'])
     def reprioritize(self, request, pk=None):
         serializer = self.get_serializer_class()(data=self.request.data)
@@ -105,14 +105,27 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if not serializer.is_valid():
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        priorities = serializer.data['priorities']
+        priority = serializer.data['index']
+        up = serializer.data['up']
 
         project = self.get_object()
-        tasks = project.tasks.all()
+        tasks = project.tasks.order_by('priority').all()
 
-        for task in tasks:
-            task.priority = priorities.index(task.priority)
-            task.save()
+        from_task = tasks[priority]
+        to_task = None
+
+        if up and priority > 0:
+            to_task = tasks[priority - 1]
+        elif not up and priority < len(tasks) - 1:
+            to_task = tasks[priority + 1]
+
+        if to_task != None:
+            temp = from_task.priority
+            from_task.priority = to_task.priority
+            to_task.priority = temp
+
+            to_task.save()
+            from_task.save()
 
         data = self.serializer_class(instance=project, context={'request': request}).data
 
@@ -125,3 +138,16 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     serializer_class = TaskSeriaizer
     queryset = Task.objects.all()
+
+    def destroy(self, request, pk=None):
+        task = self.get_object()
+
+        project = task.project_set().first()
+
+        super(TaskViewSet, self).destroy(request, pk)
+
+        tasks = project.tasks.all()
+
+        for index in tasks:
+            tasks[index].priority = index
+            task.save()
